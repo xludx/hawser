@@ -130,8 +130,6 @@ func (c *Client) runWithReconnect() error {
 		if err == nil {
 			backoff = time.Duration(c.cfg.ReconnectDelay) * time.Second
 			c.run()
-			// Close the connection before reconnecting to prevent dual-connection bug
-			c.close()
 		} else {
 			log.Errorf("Connection failed: %v", err)
 		}

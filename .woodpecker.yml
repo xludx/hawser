@@ -6,11 +6,6 @@ when:
   - event: manual
 
 steps:
-  build-golang:
-    image: golang:1.22
-    commands:
-      - go build -ldflags="-s -w" -o hawser ./cmd/hawser
-
   build-latest:
     image: woodpeckerci/plugin-docker-buildx
     when:
@@ -28,8 +23,6 @@ steps:
       platforms:
         - linux/amd64
         - linux/arm64
-    depends_on:
-      - build-golang
 
   build-custom:
     image: woodpeckerci/plugin-docker-buildx
@@ -48,5 +41,3 @@ steps:
       platforms:
         - linux/amd64
         - linux/arm64
-    depends_on:
-      - build-golang

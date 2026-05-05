@@ -60,7 +60,20 @@ RUN apko build apko.yaml hawser-base:latest output.tar \
     && tar -xzf "$LAYER" -C rootfs
 
 # -----------------------------------------------------------------------------
-# Stage 2: Final Image (Scratch + Custom Wolfi OS)
+# Stage 2: Go Build
+# -----------------------------------------------------------------------------
+FROM golang:1.22-alpine AS builder
+WORKDIR /app
+
+# Copy source code
+COPY . .
+
+# Build binary for target architecture
+ARG TARGETARCH
+RUN GOOS=linux GOARCH=$TARGETARCH go build -ldflags="-s -w" -o hawser ./cmd/hawser
+
+# -----------------------------------------------------------------------------
+# Stage 3: Final Image (Scratch + Custom Wolfi OS)
 # -----------------------------------------------------------------------------
 FROM scratch
 
@@ -88,8 +101,8 @@ RUN mkdir -p /usr/libexec/docker/cli-plugins \
 # Declare as volume to ensure writability even with --read-only
 VOLUME /data/stacks
 
-# Copy pre-built binary (provided by goreleaser)
-COPY hawser /usr/local/bin/hawser
+# Copy built binary from builder stage
+COPY --from=builder /app/hawser /usr/local/bin/hawser
 RUN chmod +x /usr/local/bin/hawser
 
 # Expose default port
