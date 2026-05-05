@@ -236,12 +236,18 @@ func (c *Client) connect() error {
 	// Send hello message
 	if err := c.sendHello(); err != nil {
 		conn.Close()
+		c.mu.Lock()
+		c.conn = nil
+		c.mu.Unlock()
 		return fmt.Errorf("failed to send hello: %w", err)
 	}
 
 	// Wait for welcome message
 	if err := c.waitForWelcome(); err != nil {
 		conn.Close()
+		c.mu.Lock()
+		c.conn = nil
+		c.mu.Unlock()
 		return fmt.Errorf("failed to receive welcome: %w", err)
 	}
 
