@@ -128,10 +128,14 @@ func (c *Client) runWithReconnect() error {
 
 		err := c.connect()
 		if err == nil {
+			log.Warnf("✅ LOOP: Connection successful")
 			backoff = time.Duration(c.cfg.ReconnectDelay) * time.Second
+			log.Warnf("🏃 LOOP: Starting c.run()")
 			c.run()
+			log.Warnf("🏃 LOOP: c.run() returned, calling close()")
 			// Close the connection before reconnecting to prevent dual-connection bug
 			c.close()
+			log.Warnf("🔄 LOOP: c.close() completed")
 		} else {
 			log.Errorf("Connection failed: %v", err)
 		}
@@ -164,13 +168,15 @@ func (c *Client) runWithReconnect() error {
 
 // connect establishes WebSocket connection to Dockhand
 func (c *Client) connect() error {
-	log.Infof("Connecting to %s", c.cfg.DockhandServerURL)
+	log.Warnf("🟢 CONNECT: Starting connection to %s", c.cfg.DockhandServerURL)
 
 	c.mu.Lock()
 	if c.conn != nil {
-		log.Warnf("Existing connection detected - closing it before establishing new one")
+		log.Warnf("🟡 CONNECT: Existing connection detected - closing it before establishing new one")
 		c.conn.Close()
 		c.conn = nil
+	} else {
+		log.Warnf("🟢 CONNECT: No existing connection (c.conn is nil)")
 	}
 	c.mu.Unlock()
 
@@ -217,11 +223,12 @@ func (c *Client) connect() error {
 	c.mu.Lock()
 	// Close any existing connection before storing the new one to prevent dual-connection bug
 	if c.conn != nil {
-		log.Warnf("Closing existing connection before establishing new one")
+		log.Warnf("🟡 CONNECT: Second check - closing existing connection before establishing new one")
 		c.conn.Close()
 	}
 	c.conn = conn
 	c.mu.Unlock()
+	log.Warnf("🟢 CONNECT: New connection stored in c.conn")
 
 	// Limit max inbound message size to 16 MB to prevent OOM from malicious server
 	conn.SetReadLimit(16 << 20)
@@ -1113,6 +1120,7 @@ func (c *Client) handleExecEnd(msg *protocol.ExecEndMessage) {
 
 // close closes the WebSocket connection
 func (c *Client) close() {
+	log.Warnf("🔴 CLOSE: Starting connection close")
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -1128,6 +1136,7 @@ func (c *Client) close() {
 	c.execSessionsMu.Unlock()
 
 	if c.conn != nil {
+		log.Warnf("🔴 CLOSE: Closing existing WebSocket connection")
 		// Send close frame with normal closure status
 		c.conn.WriteControl(
 			websocket.CloseMessage,
@@ -1136,6 +1145,9 @@ func (c *Client) close() {
 		)
 		c.conn.Close()
 		c.conn = nil
+		log.Warnf("🔴 CLOSE: Connection set to nil")
+	} else {
+		log.Warnf("🔴 CLOSE: No connection to close (c.conn is already nil)")
 	}
 }
 
