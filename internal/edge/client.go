@@ -28,6 +28,7 @@ import (
 	"github.com/Finsys/hawser/internal/pool"
 	"github.com/Finsys/hawser/internal/protocol"
 	"github.com/gorilla/websocket"
+	"runtime"
 )
 
 // Client represents the Edge mode WebSocket client
@@ -128,14 +129,14 @@ func (c *Client) runWithReconnect() error {
 
 		err := c.connect()
 		if err == nil {
-			log.Warnf("✅ LOOP: Connection successful")
+			log.Warnf("✅ LOOP [%s]: Connection successful", gid)
 			backoff = time.Duration(c.cfg.ReconnectDelay) * time.Second
-			log.Warnf("🏃 LOOP: Starting c.run()")
+			log.Warnf("🏃 LOOP [%s]: Starting c.run()", gid)
 			c.run()
-			log.Warnf("🏃 LOOP: c.run() returned, calling close()")
+			log.Warnf("🏃 LOOP [%s]: c.run() returned, calling close()", gid)
 			// Close the connection before reconnecting to prevent dual-connection bug
 			c.close()
-			log.Warnf("🔄 LOOP: c.close() completed")
+			log.Warnf("🔄 LOOP [%s]: c.close() completed", gid)
 		} else {
 			log.Errorf("Connection failed: %v", err)
 		}
@@ -168,15 +169,16 @@ func (c *Client) runWithReconnect() error {
 
 // connect establishes WebSocket connection to Dockhand
 func (c *Client) connect() error {
-	log.Warnf("🟢 CONNECT: Starting connection to %s", c.cfg.DockhandServerURL)
+	gid := fmt.Sprintf("G-%d", runtime.NumGoroutine())
+	log.Warnf("🟢 CONNECT [%s]: Starting connection to %s", gid, c.cfg.DockhandServerURL)
 
 	c.mu.Lock()
 	if c.conn != nil {
-		log.Warnf("🟡 CONNECT: Existing connection detected - closing it before establishing new one")
+		log.Warnf("🟡 CONNECT [%s]: Existing connection detected - closing it before establishing new one", gid)
 		c.conn.Close()
 		c.conn = nil
 	} else {
-		log.Warnf("🟢 CONNECT: No existing connection (c.conn is nil)")
+		log.Warnf("🟢 CONNECT [%s]: No existing connection (c.conn is nil)", gid)
 	}
 	c.mu.Unlock()
 
@@ -228,7 +230,7 @@ func (c *Client) connect() error {
 	}
 	c.conn = conn
 	c.mu.Unlock()
-	log.Warnf("🟢 CONNECT: New connection stored in c.conn")
+	log.Warnf("🟢 CONNECT [%s]: New connection stored in c.conn", gid)
 
 	// Limit max inbound message size to 16 MB to prevent OOM from malicious server
 	conn.SetReadLimit(16 << 20)
