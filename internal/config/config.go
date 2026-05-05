@@ -36,7 +36,8 @@ type Config struct {
 	RequestTimeout    int // Default: 30
 	ReconnectDelay    int // Initial reconnect delay, default: 1
 	MaxReconnectDelay int // Max reconnect delay, default: 60
-	WelcomeTimeout    int // Timeout waiting for welcome message after hello, default: 45 (DERP-friendly)
+	WelcomeTimeout    int // Timeout waiting for welcome message after hello, default: 30
+	HandshakeTimeout  int // WebSocket handshake timeout, default: 10 (increase to 45 for DERP relay)
 
 	// Logging
 	LogLevel string // debug, info, warn, error. Default: info
@@ -77,7 +78,8 @@ func Load() (*Config, error) {
 		RequestTimeout:    getEnvInt("REQUEST_TIMEOUT", 30),
 		ReconnectDelay:    getEnvInt("RECONNECT_DELAY", 1),
 		MaxReconnectDelay: getEnvInt("MAX_RECONNECT_DELAY", 60),
-		WelcomeTimeout:    getEnvInt("WELCOME_TIMEOUT", 45),
+		WelcomeTimeout:    getEnvInt("WELCOME_TIMEOUT", 30),
+		HandshakeTimeout:  getEnvInt("HANDSHAKE_TIMEOUT", 10),
 
 		// Logging
 		LogLevel: getEnvString("LOG_LEVEL", "info"),

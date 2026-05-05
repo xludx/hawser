@@ -188,10 +188,7 @@ func (c *Client) connect() error {
 	}
 
 	dialer := websocket.Dialer{
-		// Longer timeout for DERP relay connections over high-latency networks (Starlink)
-		// DERP needs 5-10s for tunnel + 5-10s for WebSocket handshake
-		// 45s provides buffer for latency variability and prevents reconnect storms
-		HandshakeTimeout: 45 * time.Second,
+		HandshakeTimeout: time.Duration(c.cfg.HandshakeTimeout) * time.Second,
 	}
 
 	// Configure TLS if needed (for wss:// connections)
