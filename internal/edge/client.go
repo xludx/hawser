@@ -126,6 +126,7 @@ func (c *Client) runWithReconnect() error {
 			return nil
 		default:
 		}
+			gid := fmt.Sprintf("G-%d", runtime.NumGoroutine())
 
 		err := c.connect()
 		if err == nil {
