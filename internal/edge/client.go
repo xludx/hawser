@@ -205,6 +205,11 @@ func (c *Client) connect() error {
 	}
 
 	c.mu.Lock()
+	// Close any existing connection before storing the new one to prevent dual-connection bug
+	if c.conn != nil {
+		log.Warnf("Closing existing connection before establishing new one")
+		c.conn.Close()
+	}
 	c.conn = conn
 	c.mu.Unlock()
 
